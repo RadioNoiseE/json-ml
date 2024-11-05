@@ -1,6 +1,6 @@
 type t = Datatype.stt
-open Datatype
 
+open Datatype
 open Lexing
 open Printf
 
@@ -11,13 +11,11 @@ let print_position outx lexbuf =
 let parse_with_error lexbuf =
   try Parser.decl Lexer.read lexbuf with
     Lexer.SyntaxError msg ->
-     fprintf stderr "%a: %s\n" print_position lexbuf msg;
-     `Null
+    fprintf stderr "%a: %s\n" print_position lexbuf msg;
+    exit (-1)
 
 let rec parse_json lexbuf =
-  match parse_with_error lexbuf with
-  | `Null -> ()
-  | _ -> parse_json lexbuf
+  parse_with_error lexbuf
 
 let parse (json: string) =
   let lexbuf = Lexing.from_string json in
@@ -38,21 +36,25 @@ exception EmptyArray
 exception NotObject
 exception EmptyObject
 
-let as_number = function
-  | `Int i -> float_of_int i
-  | `Float f -> f
+let as_number nmr =
+  match nmr with
+  | `Integer nmr -> float_of_int nmr
+  | `Float nmr -> nmr
   | _ -> raise NotNumericValue
 
-let as_string = function
-  | `String s -> s
-  | _ -> NotStringableValue
+let as_string str =
+  match str with
+  | `String str -> str
+  | _ -> raise NotStringableValue
 
-let get_mem n = function
+let rec get_mem (n: int) a =
+  match a with
   | `Array ([]) -> raise EmptyArray
   | `Array (a) -> List.nth a n
   | _ -> raise NotArray
 
-let get_child k = function
+let rec get_child (k: string) o =
+  match o with
   | `Object ([]) -> raise EmptyObject
   | `Object (o) -> List.assoc k o
   | _ -> raise NotObject

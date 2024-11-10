@@ -1,6 +1,3 @@
-type t = Datatype.stt
-
-open Datatype
 open Lexing
 open Printf
 
@@ -10,9 +7,12 @@ let print_position outx lexbuf =
 
 let parse_with_error lexbuf =
   try Parser.decl Lexer.read lexbuf with
-    Lexer.SyntaxError msg ->
-    fprintf stderr "%a: %s\n" print_position lexbuf msg;
-    exit (-1)
+  | Lexer.SyntaxError msg ->
+     fprintf stderr "%a: %s\n" print_position lexbuf msg;
+     `Null
+  | Parsing.Parse_error ->
+     fprintf stderr "%a: syntax error\n" print_position lexbuf;
+     exit (-1)
 
 let rec parse_json lexbuf =
   parse_with_error lexbuf
